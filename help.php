@@ -4,7 +4,7 @@
  *
  * @package     e107_options
  * @version     1.0.1
- * @author      Scott Dowlen <https://github.com/scottdd/e107-display-options>
+ * @author      Scott Dowlen <https://github.com/scottdd/e107-tools-display-options>
  * @license     GPL-2.0-or-later
  * @note        Imagined by human, built with AI.
  */

@@ -40,18 +40,18 @@ Provides visitors with an accessible, persistent control panel — available as 
 ## Installation
 
 > **Important Note on Plugin Folder Name (`e107_options`):**
-> - **Recommended:** Download **`e107_options_v1.0.1.zip`** from the [Releases page](https://github.com/scottdd/e107-display-options/releases/latest). It is pre-packaged with the required **`e107_options/`** folder structure.
-> - **If you use GitHub's green "Code → Download ZIP" button (`e107-display-options-main.zip`) or `git clone`:** You **must** rename the extracted folder inside `e107_plugins/` to **`e107_options`** (or `e107_display_options` — **never use hyphens** like `e107-display-options`). e107 v2's `e107_handlers/shortcode_handler.php` constructs the PHP shortcode class name directly from the folder name (`<folder>_shortcodes`), and PHP class names cannot contain hyphens (`-`).
+> - **Recommended:** Download **`e107-tools-display-options-v1.0.1.zip`** (or **`e107_options_v1.0.1.zip`**) from the [Releases page](https://github.com/scottdd/e107-tools-display-options/releases/latest). It is pre-packaged with the required **`e107_options/`** folder structure.
+> - **If you use GitHub's green "Code → Download ZIP" button (`e107-tools-display-options-main.zip`) or `git clone`:** You **must** rename the extracted folder inside `e107_plugins/` to **`e107_options`** (or `e107_display_options` — **never use hyphens** like `e107-tools-display-options-main`). e107 v2's `e107_handlers/shortcode_handler.php` constructs the PHP shortcode class name directly from the folder name (`<folder>_shortcodes`), and PHP class names cannot contain hyphens (`-`).
 
 ### Option A: One-Click Upload via e107 Admin (Recommended)
-1. Download **`e107_options_v1.0.1.zip`** from the [latest GitHub Release](https://github.com/scottdd/e107-display-options/releases/latest).
-2. In your e107 Admin area, go to **Admin → Plugin Manager → Upload Plugin** and upload `e107_options_v1.0.1.zip`.
+1. Download **`e107-tools-display-options-v1.0.1.zip`** (or **`e107_options_v1.0.1.zip`**) from the [latest GitHub Release](https://github.com/scottdd/e107-tools-display-options/releases/latest).
+2. In your e107 Admin area, go to **Admin → Plugin Manager → Upload Plugin** and upload the `.zip` archive.
 3. Click **Install** next to **e107 display options** (`e107_options`).
 
 ### Option B: Clone or Extract into `e107_plugins/`
 ```bash
 cd /path/to/e107/e107_plugins
-git clone https://github.com/scottdd/e107-display-options.git e107_options
+git clone https://github.com/scottdd/e107-tools-display-options.git e107_options
 ```
 Then visit **Admin → Plugin Manager** and install **e107 display options**.
 
