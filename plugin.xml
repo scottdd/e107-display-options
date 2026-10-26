@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<e107Plugin name="e107 display options" lan="LAN_PLUGIN_E107OPT_NAME" version="1.0.0" date="2026-10-25" compatibility="2.0" installRequired="true">
+	<author name="ScottD" url="https://dowlen.net" />
+	<summary lan="LAN_PLUGIN_E107OPT_SUMMARY">Unified frontend Display &amp; Reader Options control panel (Light/Dark/Auto mode, Theme &amp; Variant switcher, Language switcher, Text Size scaler, and Wide/Reader Focus layout controls) in both Navbar Popover and Sidebar Menu modes.</summary>
+	<description lan="LAN_PLUGIN_E107OPT_DESC">Provides a sleek, zero-FOUC Display &amp; Reader Options widget for e107 v2.3+ and PHP 8.x. Supports both a compact Navbar Popover Dropdown ({E107_OPTIONS} or automatic header injection) and a Sidebar Menu Card (e107_options_menu). Automatically detects installed themes, theme.xml stylesheet variants, color-mode support, and installed language packs, with per-selector ordering, force-blocking, and userclass visibility controls.</description>
+	<keywords>
+		<word>options</word>
+		<word>theme</word>
+		<word>darkmode</word>
+		<word>accessibility</word>
+		<word>reader</word>
+	</keywords>
+	<category>settings</category>
+	<copyright>Copyright (C) 2026 ScottD / DowlenHouse</copyright>
+	<adminLinks>
+		<link url="admin_config.php" description="Configure e107 display options" icon="images/icon_32.png" iconSmall="images/icon_16.png" icon128="images/icon_128.png" primary="true">LAN_CONFIGURE</link>
+	</adminLinks>
+	<sitePrefs>
+		<pref name="default_mode">popover</pref>
+		<pref name="auto_navbar_inject">1</pref>
+		<pref name="navbar_target_selector">#theme-toggle, .site-header .d-flex, .navbar-nav, #navigation, #subnav, #slink</pref>
+		<pref name="replace_theme_toggle">0</pref>
+		<pref name="colormode_force_all">1</pref>
+		<pref name="allowed_themes"></pref>
+		<pref name="colormode_themes"></pref>
+		<pref name="sel_colormode_blocked">0</pref>
+		<pref name="sel_colormode_order">1</pref>
+		<pref name="sel_colormode_class">0</pref>
+		<pref name="sel_theme_blocked">0</pref>
+		<pref name="sel_theme_order">2</pref>
+		<pref name="sel_theme_class">0</pref>
+		<pref name="sel_language_blocked">0</pref>
+		<pref name="sel_language_order">3</pref>
+		<pref name="sel_language_class">0</pref>
+		<pref name="sel_fontsize_blocked">0</pref>
+		<pref name="sel_fontsize_order">4</pref>
+		<pref name="sel_fontsize_class">0</pref>
+		<pref name="sel_layoutwidth_blocked">0</pref>
+		<pref name="sel_layoutwidth_order">5</pref>
+		<pref name="sel_layoutwidth_class">0</pref>
+	</sitePrefs>
+</e107Plugin>

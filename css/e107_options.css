@@ -1,0 +1,384 @@
+/**
+ * e107_options — Frontend Stylesheet (Navbar Popover, Sidebar Menu Card, Reader Modes & Light/Dark Support)
+ */
+
+:root {
+	--e107opt-bg: #1b2230;
+	--e107opt-surface: #232c3d;
+	--e107opt-border: #334155;
+	--e107opt-text: #f1f5f9;
+	--e107opt-muted: #94a3b8;
+	--e107opt-accent: #3b82f6;
+	--e107opt-accent-hover: #2563eb;
+	--e107opt-shadow: 0 14px 34px rgba(0, 0, 0, 0.48);
+}
+
+html[data-e107-resolved-theme="light"] {
+	--e107opt-bg: #ffffff;
+	--e107opt-surface: #f1f5f9;
+	--e107opt-border: #cbd5e1;
+	--e107opt-text: #0f172a;
+	--e107opt-muted: #475569;
+	--e107opt-accent: #2563eb;
+	--e107opt-accent-hover: #1d4ed8;
+	--e107opt-shadow: 0 12px 28px rgba(15, 23, 42, 0.16);
+}
+
+/* Light mode support for ModernDark when switched to Light */
+html[data-e107-resolved-theme="light"] body {
+	--bs-body-bg: #f8fafc;
+	--bs-body-color: #1e293b;
+	--card-bg: #ffffff;
+	--card-border: #cbd5e1;
+	background-color: #f8fafc;
+	color: #1e293b;
+}
+
+html[data-e107-resolved-theme="light"] .site-header {
+	background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
+	border-bottom-color: #1d4ed8;
+}
+
+html[data-e107-resolved-theme="light"] .sidebar-panel,
+html[data-e107-resolved-theme="light"] .card {
+	background-color: #ffffff;
+	border-color: #cbd5e1;
+	color: #1e293b;
+}
+
+html[data-e107-resolved-theme="light"] .welcome-message {
+	background-color: #ffffff !important;
+	color: #1e293b !important;
+	border-color: #cbd5e1 !important;
+}
+
+html[data-e107-resolved-theme="light"] .vertical-nav .nav-link {
+	color: #334155;
+}
+
+html[data-e107-resolved-theme="light"] .vertical-nav .nav-link:hover,
+html[data-e107-resolved-theme="light"] .vertical-nav .nav-link.active {
+	background-color: #2563eb;
+	color: #ffffff;
+}
+
+/* Widget base */
+.e107opt-widget {
+	font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+	font-size: 14px;
+	line-height: 1.4;
+	color: var(--e107opt-text);
+	box-sizing: border-box;
+}
+
+.e107opt-widget *,
+.e107opt-widget *::before,
+.e107opt-widget *::after {
+	box-sizing: border-box;
+}
+
+/* Navbar Popover Wrapper & Trigger Button */
+.e107opt-popover-wrap {
+	position: relative;
+	display: inline-flex;
+	align-items: center;
+	margin-left: 0.5rem;
+	z-index: 1050;
+}
+
+.e107opt-popover-wrap.e107opt-floating-fallback {
+	position: fixed;
+	top: 14px;
+	right: 16px;
+	z-index: 9999;
+}
+
+.e107opt-trigger-btn {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 7px 13px;
+	border-radius: 999px;
+	border: 1px solid rgba(255, 255, 255, 0.28);
+	background: rgba(15, 23, 42, 0.78);
+	color: #f8fafc;
+	font-size: 13.5px;
+	font-weight: 600;
+	cursor: pointer;
+	transition: all 0.18s ease;
+	backdrop-filter: blur(8px);
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+}
+
+.e107opt-trigger-btn:hover,
+.e107opt-trigger-btn[aria-expanded="true"] {
+	background: var(--e107opt-accent);
+	border-color: var(--e107opt-accent);
+	color: #ffffff;
+}
+
+.e107opt-trigger-icon {
+	font-size: 15px;
+	line-height: 1;
+}
+
+.e107opt-trigger-caret {
+	font-size: 11px;
+	opacity: 0.85;
+}
+
+/* Popover Dropdown Panel */
+.e107opt-popover-panel {
+	position: absolute;
+	top: calc(100% + 10px);
+	right: 0;
+	width: 320px;
+	background: var(--e107opt-bg);
+	border: 1px solid var(--e107opt-border);
+	border-radius: 12px;
+	box-shadow: var(--e107opt-shadow);
+	color: var(--e107opt-text);
+	overflow: hidden;
+	z-index: 9999;
+}
+
+.e107opt-popover-panel[hidden] {
+	display: none !important;
+}
+
+.e107opt-popover-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 10px 14px;
+	background: var(--e107opt-surface);
+	border-bottom: 1px solid var(--e107opt-border);
+}
+
+.e107opt-popover-title {
+	font-weight: 700;
+	font-size: 13.5px;
+	letter-spacing: 0.01em;
+}
+
+.e107opt-popover-close {
+	background: transparent;
+	border: none;
+	color: var(--e107opt-muted);
+	font-size: 19px;
+	line-height: 1;
+	cursor: pointer;
+	padding: 0 4px;
+}
+
+.e107opt-popover-close:hover {
+	color: var(--e107opt-text);
+}
+
+.e107opt-popover-body {
+	padding: 12px 14px;
+}
+
+/* Inline Sidebar Menu Card */
+.e107opt-inline-card {
+	background: var(--e107opt-bg);
+	border: 1px solid var(--e107opt-border);
+	border-radius: 10px;
+	padding: 12px;
+	color: var(--e107opt-text);
+}
+
+/* Control Groups */
+.e107opt-group {
+	padding-bottom: 11px;
+	margin-bottom: 11px;
+	border-bottom: 1px solid var(--e107opt-border);
+}
+
+.e107opt-group:last-of-type {
+	margin-bottom: 8px;
+}
+
+.e107opt-label-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: 6px;
+}
+
+.e107opt-label {
+	font-size: 12.5px;
+	font-weight: 600;
+	color: var(--e107opt-text);
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+}
+
+.e107opt-icon {
+	color: var(--e107opt-accent);
+	font-weight: 700;
+}
+
+.e107opt-value-badge {
+	font-size: 11px;
+	font-weight: 600;
+	padding: 1px 7px;
+	border-radius: 999px;
+	background: var(--e107opt-surface);
+	color: var(--e107opt-muted);
+	border: 1px solid var(--e107opt-border);
+}
+
+/* Segmented Buttons */
+.e107opt-segmented {
+	display: grid;
+	grid-auto-flow: column;
+	grid-auto-columns: 1fr;
+	gap: 4px;
+	background: var(--e107opt-surface);
+	padding: 3px;
+	border-radius: 8px;
+	border: 1px solid var(--e107opt-border);
+}
+
+.e107opt-seg-btn {
+	border: none;
+	background: transparent;
+	color: var(--e107opt-muted);
+	font-size: 12px;
+	font-weight: 600;
+	padding: 5px 6px;
+	border-radius: 6px;
+	cursor: pointer;
+	transition: all 0.15s ease;
+	white-space: nowrap;
+}
+
+.e107opt-seg-btn:hover {
+	color: var(--e107opt-text);
+}
+
+.e107opt-seg-btn.is-active {
+	background: var(--e107opt-accent);
+	color: #ffffff;
+	box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+}
+
+/* Select Dropdown */
+.e107opt-select {
+	width: 100%;
+	padding: 6px 10px;
+	border-radius: 7px;
+	border: 1px solid var(--e107opt-border);
+	background: var(--e107opt-surface);
+	color: var(--e107opt-text);
+	font-size: 13px;
+	font-weight: 500;
+	cursor: pointer;
+}
+
+.e107opt-select:focus {
+	outline: 2px solid var(--e107opt-accent);
+	outline-offset: 1px;
+}
+
+/* Variant Color Pills */
+.e107opt-sub-group {
+	margin-top: 8px;
+}
+
+.e107opt-sub-label {
+	margin-bottom: 4px;
+}
+
+.e107opt-variant-pills {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 5px;
+}
+
+.e107opt-variant-btn {
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	padding: 4px 8px;
+	border-radius: 999px;
+	border: 1px solid var(--e107opt-border);
+	background: var(--e107opt-surface);
+	color: var(--e107opt-text);
+	font-size: 11.5px;
+	font-weight: 500;
+	cursor: pointer;
+	transition: all 0.15s ease;
+}
+
+.e107opt-variant-btn:hover {
+	border-color: var(--e107opt-accent);
+}
+
+.e107opt-variant-btn.is-active {
+	border-color: var(--e107opt-accent);
+	background: rgba(59, 130, 246, 0.18);
+	font-weight: 700;
+}
+
+.e107opt-swatch {
+	width: 10px;
+	height: 10px;
+	border-radius: 50%;
+	display: inline-block;
+	border: 1px solid rgba(255, 255, 255, 0.45);
+}
+
+/* Reset Footer */
+.e107opt-footer-row {
+	display: flex;
+	justify-content: flex-end;
+	padding-top: 2px;
+}
+
+.e107opt-reset-btn {
+	background: transparent;
+	border: none;
+	color: var(--e107opt-muted);
+	font-size: 11.5px;
+	text-decoration: underline;
+	cursor: pointer;
+	padding: 2px 4px;
+}
+
+.e107opt-reset-btn:hover {
+	color: var(--e107opt-text);
+}
+
+/* =========================================================
+   Container Width ("wide") & Reader Focus ("reader") Modes
+   ========================================================= */
+html[data-e107-width="wide"] .container {
+	max-width: 96% !important;
+	width: 96% !important;
+}
+
+html[data-e107-width="wide"] #page,
+html[data-e107-width="wide"] #wrapper {
+	max-width: 96% !important;
+	width: 96% !important;
+}
+
+html[data-e107-width="reader"] .main-content .col-lg-4,
+html[data-e107-width="reader"] #sidebar-left,
+html[data-e107-width="reader"] #sidebar-right,
+html[data-e107-width="reader"] #Menu_3_4 {
+	display: none !important;
+}
+
+html[data-e107-width="reader"] .main-content .col-lg-8,
+html[data-e107-width="reader"] #left-col,
+html[data-e107-width="reader"] #content {
+	width: 100% !important;
+	max-width: 860px !important;
+	margin-left: auto !important;
+	margin-right: auto !important;
+	float: none !important;
+}
