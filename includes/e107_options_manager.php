@@ -1,7 +1,7 @@
 <?php
 /**
  * e107_options — Central Capability Detector, Preference Manager & Renderer
- * Compatible with e107 v2.3.x and PHP 7.4–8.4+ (v1.0.1)
+ * Compatible with e107 v2.3.x and PHP 7.4–8.4+ (v1.0.2)
  */
 
 if (!defined('e107_INIT')) { exit; }
@@ -23,6 +23,9 @@ if (is_readable($_e107optPluginDir . '/languages/English/English_front.php'))
 
 class e107_options_manager
 {
+	/** @var bool Guard so stale-folder healing runs at most once per request */
+	private static $healedThisRequest = false;
+
 	/**
 	 * Return the actual directory name under e107_plugins/ (e.g. 'e107_options' or 'e107_display_options').
 	 *
@@ -31,6 +34,137 @@ class e107_options_manager
 	public static function getPluginFolder(): string
 	{
 		return basename(dirname(__DIR__));
+	}
+
+	/**
+	 * Self-heal stale hyphenated plugin registrations (e.g. 'e107-display-options' or
+	 * 'e107-tools-display-options-main') left over in e_shortcode_list, e_header_list,
+	 * e_module_list, lan_global_list, plug_installed, or the #plugin table when an earlier
+	 * GitHub source archive was extracted before installing the canonical e107_options folder.
+	 *
+	 * @return void
+	 */
+	public static function healStaleFolderRegistrations(): void
+	{
+		if (self::$healedThisRequest || !class_exists('e107', false))
+		{
+			return;
+		}
+		self::$healedThisRequest = true;
+
+		$pluginsRoot = dirname(dirname(__DIR__));
+		$currentFolder = self::getPluginFolder();
+		$canonicalExists = is_dir($pluginsRoot . '/e107_options');
+		$activeCanonical = $canonicalExists ? 'e107_options' : $currentFolder;
+
+		$listKeys = array('e_shortcode_list', 'e_header_list', 'e_module_list', 'lan_global_list', 'plug_installed');
+		$coreCfg = e107::getConfig('core');
+		if (!$coreCfg)
+		{
+			return;
+		}
+
+		$staleFound = array();
+		$changed = false;
+
+		foreach ($listKeys as $listKey)
+		{
+			$list = $coreCfg->get($listKey);
+			if (!is_array($list))
+			{
+				continue;
+			}
+			$listModified = false;
+			foreach (array_keys($list) as $k)
+			{
+				if ($k === $activeCanonical)
+				{
+					continue;
+				}
+				if (preg_match('/^e107[-_](?:tools[-_])?(?:display[-_])?options/i', (string) $k))
+				{
+					// If it contains hyphens or differs from the active canonical folder when canonical exists
+					if (strpos((string) $k, '-') !== false || $canonicalExists)
+					{
+						$staleFound[(string) $k] = true;
+						unset($list[$k]);
+						$listModified = true;
+					}
+				}
+			}
+
+			if ($listModified)
+			{
+				if ($canonicalExists && $listKey !== 'plug_installed' && !isset($list['e107_options']))
+				{
+					$list['e107_options'] = 'e107_options';
+				}
+				$coreCfg->set($listKey, $list);
+				if (isset($GLOBALS['pref']) && is_array($GLOBALS['pref']))
+				{
+					$GLOBALS['pref'][$listKey] = $list;
+				}
+				$changed = true;
+			}
+		}
+
+		if ($changed)
+		{
+			try
+			{
+				$coreCfg->save(false, true, false);
+			}
+			catch (Throwable $e)
+			{
+				// Ignore DB/file save errors during early boot; in-memory $coreCfg and $GLOBALS['pref'] are already healed
+			}
+		}
+
+		// Also patch any leftover hyphenated folder's e_shortcode.php on disk and mark its #plugin row uninstalled
+		$candidateDirs = array_unique(array_merge(
+			array_keys($staleFound),
+			array('e107-display-options', 'e107-display-options-main', 'e107-tools-display-options', 'e107-tools-display-options-main')
+		));
+		$ourShortcodeFile = dirname(__DIR__) . '/e_shortcode.php';
+
+		foreach ($candidateDirs as $dirName)
+		{
+			if ($dirName === $activeCanonical || !preg_match('/^[a-zA-Z0-9_-]+$/', $dirName))
+			{
+				continue;
+			}
+			$staleShortcode = $pluginsRoot . '/' . $dirName . '/e_shortcode.php';
+			if (is_file($staleShortcode) && is_writable($staleShortcode) && is_file($ourShortcodeFile))
+			{
+				$existingCode = @file_get_contents($staleShortcode);
+				if (is_string($existingCode) && strpos($existingCode, "\$classFunc = 'e107_options_shortcodes'") === false)
+				{
+					@copy($ourShortcodeFile, $staleShortcode);
+				}
+			}
+		}
+
+		if (!empty($staleFound))
+		{
+			try
+			{
+				$sql = e107::getDb();
+				if ($sql)
+				{
+					foreach (array_keys($staleFound) as $staleDir)
+					{
+						if (preg_match('/^[a-zA-Z0-9_-]+$/', $staleDir))
+						{
+							$sql->update('plugin', "plugin_installflag = 0 WHERE plugin_path = '" . $staleDir . "'");
+						}
+					}
+				}
+			}
+			catch (Throwable $e)
+			{
+				// Ignore DB errors if table not ready
+			}
+		}
 	}
 
 	/**

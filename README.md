@@ -1,4 +1,4 @@
-# e107 Display Options (`e107_options`) v1.0.1
+# e107 Display Options (`e107_options`) v1.0.2
 
 A unified, zero-FOUC **Display & Reader Options** plugin for **e107 v2.3+** (compatible with **PHP 7.4 through PHP 8.4+** and **Bootstrap 3, 4, and 5** themes).
 
@@ -40,11 +40,11 @@ Provides visitors with an accessible, persistent control panel — available as 
 ## Installation
 
 > **Important Note on Plugin Folder Name (`e107_options`):**
-> - **Recommended:** Download **`e107-tools-display-options-v1.0.1.zip`** (or **`e107_options_v1.0.1.zip`**) from the [Releases page](https://github.com/scottdd/e107-tools-display-options/releases/latest). It is pre-packaged with the required **`e107_options/`** folder structure.
+> - **Recommended:** Download **`e107-tools-display-options-v1.0.2.zip`** (or **`e107_options_v1.0.2.zip`**) from the [Releases page](https://github.com/scottdd/e107-tools-display-options/releases/latest). It is pre-packaged with the required **`e107_options/`** folder structure.
 > - **If you use GitHub's green "Code → Download ZIP" button (`e107-tools-display-options-main.zip`) or `git clone`:** You **must** rename the extracted folder inside `e107_plugins/` to **`e107_options`** (or `e107_display_options` — **never use hyphens** like `e107-tools-display-options-main`). e107 v2's `e107_handlers/shortcode_handler.php` constructs the PHP shortcode class name directly from the folder name (`<folder>_shortcodes`), and PHP class names cannot contain hyphens (`-`).
 
 ### Option A: One-Click Upload via e107 Admin (Recommended)
-1. Download **`e107-tools-display-options-v1.0.1.zip`** (or **`e107_options_v1.0.1.zip`**) from the [latest GitHub Release](https://github.com/scottdd/e107-tools-display-options/releases/latest).
+1. Download **`e107-tools-display-options-v1.0.2.zip`** (or **`e107_options_v1.0.2.zip`**) from the [latest GitHub Release](https://github.com/scottdd/e107-tools-display-options/releases/latest).
 2. In your e107 Admin area, go to **Admin → Plugin Manager → Upload Plugin** and upload the `.zip` archive.
 3. Click **Install** next to **e107 display options** (`e107_options`).
 
@@ -65,6 +65,13 @@ Then visit **Admin → Plugin Manager** and install **e107 display options**.
 ---
 
 ## Changelog
+
+### v1.0.2 (2026-10-26)
+- **Hyphenated Folder & Stale `e_shortcode_list` Self-Healing (`#1`):**
+  - Updated `e_shortcode.php` to rewrite `$classFunc = 'e107_options_shortcodes'` in `e_parse_shortcode::loadPluginShortcodes()` scope whenever the folder name is not a valid PHP class identifier (such as `e107-display-options` or `e107-tools-display-options-main`), completely preventing `get_class_methods('e107-display-options_shortcodes')` from throwing a fatal `TypeError` on PHP 8.0–8.4+ even if extracted into a hyphenated folder.
+  - Added automatic self-healing in `e_module.php` and `e107_options_setup.php` (`e107_options_manager::healStaleFolderRegistrations()`) that runs on both frontend and `admin.php` requests before `e_parse_shortcode` initializes, stripping any leftover `'e107-display-options'` registrations from `e_shortcode_list`, `e_header_list`, `e_module_list`, `lan_global_list`, and `plug_installed` and upgrading any stale folder's `e_shortcode.php` in place.
+- **Cross-Theme Stylesheet (`themecss`) Isolation (`#1`):**
+  - Updated `e_module.php` so switching between multi-variant themes (such as `bootstrap5` with `https://` Bootswatch CDN stylesheets) and single-stylesheet themes (`bootstrap3`, `moderndark`, etc.) cleanly resets `themecss` to `style.css`, syncs `$GLOBALS['pref']` in memory without touching persistent `user_prefs`, and never leaks stylesheets across themes or into the admin area.
 
 ### v1.0.1 (2026-10-26)
 - **Relative Path Resolution (`#1`):** Replaced all hardcoded `e_PLUGIN . 'e107_options/...'` file includes and asset/preference lookups with `__DIR__`-relative paths and `e107_options_manager::getPluginFolder()`, so the plugin works cleanly even if installed under an underscore-renamed folder such as `e107_display_options/`.
