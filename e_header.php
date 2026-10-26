@@ -11,7 +11,7 @@ if (deftrue('e_ADMIN_AREA'))
 	return;
 }
 
-require_once(e_PLUGIN . 'e107_options/includes/e107_options_manager.php');
+require_once(__DIR__ . '/includes/e107_options_manager.php');
 
 $e107optPrefs = e107_options_manager::getPrefs();
 $visibleSelectors = e107_options_manager::getVisibleFrontendSelectors();
@@ -71,5 +71,6 @@ window.E107OptionsConfig = {$jsonConfig};
 JS;
 
 e107::js('inline', $earlyScript);
-e107::css('e107_options', 'css/e107_options.css');
-e107::js('e107_options', 'js/e107_options.js', 'jquery');
+$_e107optFolder = e107_options_manager::getPluginFolder();
+e107::css($_e107optFolder, 'css/e107_options.css');
+e107::js($_e107optFolder, 'js/e107_options.js', 'jquery');

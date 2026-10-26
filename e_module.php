@@ -12,7 +12,7 @@ if (deftrue('e_ADMIN_AREA'))
 	return;
 }
 
-require_once(e_PLUGIN . 'e107_options/includes/e107_options_manager.php');
+require_once(__DIR__ . '/includes/e107_options_manager.php');
 
 $e107optPrefs = e107_options_manager::getPrefs();
 $cookiePath = defined('e_HTTP') ? e_HTTP : '/';

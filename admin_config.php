@@ -14,8 +14,16 @@ if (!getperms('P'))
 	exit;
 }
 
-require_once(e_PLUGIN . 'e107_options/includes/e107_options_manager.php');
-e107::includeLan(e_PLUGIN . 'e107_options/languages/' . e_LANGUAGE . '/' . e_LANGUAGE . '_admin.php');
+require_once(__DIR__ . '/includes/e107_options_manager.php');
+$_e107optAdminLang = defined('e_LANGUAGE') ? e_LANGUAGE : 'English';
+if (is_readable(__DIR__ . '/languages/' . $_e107optAdminLang . '/' . $_e107optAdminLang . '_admin.php'))
+{
+	e107::includeLan(__DIR__ . '/languages/' . $_e107optAdminLang . '/' . $_e107optAdminLang . '_admin.php');
+}
+elseif (is_readable(__DIR__ . '/languages/English/English_admin.php'))
+{
+	e107::includeLan(__DIR__ . '/languages/English/English_admin.php');
+}
 
 class e107_options_adminArea extends e_admin_dispatcher
 {
@@ -50,6 +58,7 @@ class e107_options_ui extends e_admin_ui
 
 	public function init()
 	{
+		$this->pluginName = e107_options_manager::getPluginFolder();
 		$this->handlePostSave();
 	}
 
@@ -63,7 +72,7 @@ class e107_options_ui extends e_admin_ui
 			return;
 		}
 
-		$cfg = e107::getPlugConfig('e107_options');
+		$cfg = e107::getPlugConfig(e107_options_manager::getPluginFolder());
 		$mes = e107::getMessage();
 
 		if (!empty($_POST['save_selectors']))

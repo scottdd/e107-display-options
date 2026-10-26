@@ -1,15 +1,34 @@
 <?php
 /**
  * e107_options — Central Capability Detector, Preference Manager & Renderer
- * Compatible with e107 v2.3.x and PHP 8.3
+ * Compatible with e107 v2.3.x and PHP 7.4–8.4+ (v1.0.1)
  */
 
 if (!defined('e107_INIT')) { exit; }
 
-e107::includeLan(e_PLUGIN . 'e107_options/languages/' . e_LANGUAGE . '/' . e_LANGUAGE . '_front.php');
+$_e107optPluginDir = dirname(__DIR__);
+$_e107optLang = defined('e_LANGUAGE') ? e_LANGUAGE : 'English';
+if (is_readable($_e107optPluginDir . '/languages/' . $_e107optLang . '/' . $_e107optLang . '_front.php'))
+{
+	e107::includeLan($_e107optPluginDir . '/languages/' . $_e107optLang . '/' . $_e107optLang . '_front.php');
+}
+elseif (is_readable($_e107optPluginDir . '/languages/English/English_front.php'))
+{
+	e107::includeLan($_e107optPluginDir . '/languages/English/English_front.php');
+}
 
 class e107_options_manager
 {
+	/**
+	 * Return the actual directory name under e107_plugins/ (e.g. 'e107_options' or 'e107_display_options').
+	 *
+	 * @return string
+	 */
+	public static function getPluginFolder(): string
+	{
+		return basename(dirname(__DIR__));
+	}
+
 	/**
 	 * Return plugin preferences merged with defaults.
 	 *
@@ -42,7 +61,16 @@ class e107_options_manager
 			'sel_layoutwidth_class'  => e_UC_PUBLIC,
 		);
 
-		$stored = e107::pref('e107_options');
+		$folder = self::getPluginFolder();
+		$stored = e107::pref($folder);
+		if ((!is_array($stored) || empty($stored)) && $folder !== 'e107_options')
+		{
+			$fallback = e107::pref('e107_options');
+			if (is_array($fallback) && !empty($fallback))
+			{
+				$stored = $fallback;
+			}
+		}
 		if (!is_array($stored))
 		{
 			$stored = array();

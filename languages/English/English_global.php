@@ -10,10 +10,11 @@ if (defined('e_ADMIN_AREA') && e_ADMIN_AREA && class_exists('e107'))
 {
 	try
 	{
+		$_e107optFolder = basename(dirname(dirname(__DIR__)));
 		$sql = e107::getDb();
-		if ($sql && $sql->select('plugin', 'plugin_id, plugin_category', "plugin_path = 'e107_options' AND plugin_category = 'menu' LIMIT 1"))
+		if ($sql && $sql->select('plugin', 'plugin_id, plugin_category', "plugin_path = '" . $sql->escape($_e107optFolder) . "' AND plugin_category = 'menu' LIMIT 1"))
 		{
-			$sql->update('plugin', "plugin_category = 'settings' WHERE plugin_path = 'e107_options' AND plugin_category = 'menu'");
+			$sql->update('plugin', "plugin_category = 'settings' WHERE plugin_path = '" . $sql->escape($_e107optFolder) . "' AND plugin_category = 'menu'");
 		}
 	}
 	catch (Exception $e) {}
