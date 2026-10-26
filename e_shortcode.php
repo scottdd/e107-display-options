@@ -10,6 +10,8 @@
 
 if (!defined('e107_INIT')) { exit; }
 
+require_once(__DIR__ . '/includes/e107_options_manager.php');
+
 class e107_options_shortcodes extends e_shortcode
 {
 	public function sc_e107_options($parm = null)
