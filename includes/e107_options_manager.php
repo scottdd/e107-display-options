@@ -16,6 +16,10 @@ elseif (is_readable($_e107optPluginDir . '/languages/English/English_front.php')
 {
 	e107::includeLan($_e107optPluginDir . '/languages/English/English_front.php');
 }
+if (is_readable($_e107optPluginDir . '/languages/English/English_front.php'))
+{
+	include_once($_e107optPluginDir . '/languages/English/English_front.php');
+}
 
 class e107_options_manager
 {

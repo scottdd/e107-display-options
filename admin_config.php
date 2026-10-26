@@ -24,6 +24,10 @@ elseif (is_readable(__DIR__ . '/languages/English/English_admin.php'))
 {
 	e107::includeLan(__DIR__ . '/languages/English/English_admin.php');
 }
+if (is_readable(__DIR__ . '/languages/English/English_admin.php'))
+{
+	include_once(__DIR__ . '/languages/English/English_admin.php');
+}
 
 class e107_options_adminArea extends e_admin_dispatcher
 {
