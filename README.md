@@ -1,4 +1,4 @@
-# e107 Display Options (`e107_options`) v1.0.2
+# e107 Display Options (`e107_options`) v1.0.3
 
 A unified, zero-FOUC **Display & Reader Options** plugin for **e107 v2.3+** (compatible with **PHP 7.4 through PHP 8.4+** and **Bootstrap 3, 4, and 5** themes).
 
@@ -40,11 +40,11 @@ Provides visitors with an accessible, persistent control panel — available as 
 ## Installation
 
 > **Important Note on Plugin Folder Name (`e107_options`):**
-> - **Recommended:** Download **`e107-tools-display-options-v1.0.2.zip`** (or **`e107_options_v1.0.2.zip`**) from the [Releases page](https://github.com/scottdd/e107-tools-display-options/releases/latest). It is pre-packaged with the required **`e107_options/`** folder structure.
+> - **Recommended:** Download **`e107-tools-display-options-v1.0.3.zip`** (or **`e107_options_v1.0.3.zip`**) from the [Releases page](https://github.com/scottdd/e107-tools-display-options/releases/latest). It is pre-packaged with the required **`e107_options/`** folder structure.
 > - **If you use GitHub's green "Code → Download ZIP" button (`e107-tools-display-options-main.zip`) or `git clone`:** You **must** rename the extracted folder inside `e107_plugins/` to **`e107_options`** (or `e107_display_options` — **never use hyphens** like `e107-tools-display-options-main`). e107 v2's `e107_handlers/shortcode_handler.php` constructs the PHP shortcode class name directly from the folder name (`<folder>_shortcodes`), and PHP class names cannot contain hyphens (`-`).
 
 ### Option A: One-Click Upload via e107 Admin (Recommended)
-1. Download **`e107-tools-display-options-v1.0.2.zip`** (or **`e107_options_v1.0.2.zip`**) from the [latest GitHub Release](https://github.com/scottdd/e107-tools-display-options/releases/latest).
+1. Download **`e107-tools-display-options-v1.0.3.zip`** (or **`e107_options_v1.0.3.zip`**) from the [latest GitHub Release](https://github.com/scottdd/e107-tools-display-options/releases/latest).
 2. In your e107 Admin area, go to **Admin → Plugin Manager → Upload Plugin** and upload the `.zip` archive.
 3. Click **Install** next to **e107 display options** (`e107_options`).
 
@@ -65,6 +65,11 @@ Then visit **Admin → Plugin Manager** and install **e107 display options**.
 ---
 
 ## Changelog
+
+### v1.0.3 (2026-10-26)
+- **Fix Fatal `Call to undefined method e107_options_manager::getVisitorState()` in `e_module.php` (`#1`):**
+  - Restored full `e_module.php` query-parameter and cookie handling (`?e107opt_reset`, `?e107opt_lang`, `?e107opt_theme`, `?e107opt_variant`) and userclass permission checks (`check_class()`), and implemented `e107_options_manager::getVisitorState()` in `includes/e107_options_manager.php`.
+  - Fixed `$themeMeta['custompages']` key casing and single-stylesheet theme fallback (`$chosenVariant = 'style.css'`) in `e_module.php` so `https://` Bootswatch CDN URLs never leak across themes while keeping persistent `user_prefs` untouched.
 
 ### v1.0.2 (2026-10-26)
 - **Hyphenated Folder & Stale `e_shortcode_list` Self-Healing (`#1`):**

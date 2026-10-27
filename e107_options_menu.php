@@ -1,6 +1,6 @@
 <?php
 /**
- * e107_options — Sidebar Menu Item (e107_options_menu.php) (v1.0.2)
+ * e107_options — Sidebar Menu Item (e107_options_menu.php) (v1.0.3)
  * Can be placed in any Menu Area via e107 Admin -> Menu Manager.
  */
 

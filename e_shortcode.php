@@ -1,6 +1,6 @@
 <?php
 /**
- * e107_options — Global Shortcodes {E107_OPTIONS} and {E107_OPTIONS_NAV} (v1.0.2)
+ * e107_options — Global Shortcodes {E107_OPTIONS} and {E107_OPTIONS_NAV} (v1.0.3)
  * Usage in theme templates or HTML:
  *   {E107_OPTIONS}               -> Renders default mode (popover)
  *   {E107_OPTIONS: mode=popover} -> Compact navbar popover button + dropdown

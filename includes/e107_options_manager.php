@@ -1,7 +1,7 @@
 <?php
 /**
  * e107_options — Central Capability Detector, Preference Manager & Renderer
- * Compatible with e107 v2.3.x and PHP 7.4–8.4+ (v1.0.2)
+ * Compatible with e107 v2.3.x and PHP 7.4–8.4+ (v1.0.3)
  */
 
 if (!defined('e107_INIT')) { exit; }
@@ -444,6 +444,62 @@ class e107_options_manager
 		}
 
 		return $result;
+	}
+
+	/**
+	 * Return raw visitor override state from $_GET or $_COOKIE.
+	 *
+	 * @return array{theme: ?string, variant: ?string, lang: ?string, reset: bool}
+	 */
+	public static function getVisitorState(): array
+	{
+		$reset = isset($_GET['e107opt_reset']);
+		if ($reset)
+		{
+			return array(
+				'theme'   => null,
+				'variant' => null,
+				'lang'    => null,
+				'reset'   => true,
+			);
+		}
+
+		$theme = null;
+		if (!empty($_GET['e107opt_theme']))
+		{
+			$theme = preg_replace('/[^a-zA-Z0-9_-]/', '', (string) $_GET['e107opt_theme']);
+		}
+		elseif (!empty($_COOKIE['e107opt_theme']))
+		{
+			$theme = preg_replace('/[^a-zA-Z0-9_-]/', '', (string) $_COOKIE['e107opt_theme']);
+		}
+
+		$variant = null;
+		if (isset($_GET['e107opt_variant']) && $_GET['e107opt_variant'] !== '')
+		{
+			$variant = trim((string) $_GET['e107opt_variant']);
+		}
+		elseif (!isset($_GET['e107opt_theme']) && !empty($_COOKIE['e107opt_variant']))
+		{
+			$variant = trim((string) $_COOKIE['e107opt_variant']);
+		}
+
+		$lang = null;
+		if (!empty($_GET['e107opt_lang']))
+		{
+			$lang = preg_replace('/[^a-zA-Z0-9_-]/', '', (string) $_GET['e107opt_lang']);
+		}
+		elseif (!empty($_COOKIE['e107_language']))
+		{
+			$lang = preg_replace('/[^a-zA-Z0-9_-]/', '', (string) $_COOKIE['e107_language']);
+		}
+
+		return array(
+			'theme'   => ($theme !== '' && $theme !== null) ? $theme : null,
+			'variant' => ($variant !== '' && $variant !== null) ? $variant : null,
+			'lang'    => ($lang !== '' && $lang !== null) ? $lang : null,
+			'reset'   => false,
+		);
 	}
 
 	/**

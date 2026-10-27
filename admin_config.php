@@ -1,6 +1,6 @@
 <?php
 /**
- * e107_options — Admin Configuration UI (admin_config.php)
+ * e107_options — Admin Configuration UI (admin_config.php) (v1.0.3)
  * Provides 3 rich tabs/views:
  *   1. Selectors & Ordering (main/selectors)
  *   2. Theme & Color Mode Settings (main/themes)

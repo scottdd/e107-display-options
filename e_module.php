@@ -1,133 +1,178 @@
 <?php
 /**
- * e107_options — Early Boot Module (e_module.php) (v1.0.2)
- * Loaded during class2.php initialization BEFORE init_session() and BEFORE USERTHEME / e_LANGUAGE
- * and BEFORE e_parse_shortcode is initialized.
+ * e107_options — Early Boot Module (e_module.php) (v1.0.3)
  *
- * Responsibilities:
- *  0. Self-heal any stale hyphenated plugin registrations (e.g. 'e107-display-options' left over in
- *     e_shortcode_list / e_header_list / e_module_list / plug_installed from an earlier GitHub archive
- *     extraction) on both frontend and admin requests before shortcode_handler.php runs.
- *  1. Read visitor's chosen theme cookie (e107opt_theme) and validate against admin-allowed themes.
- *  2. Override core sitetheme, themecss, sitetheme_deflayout, and sitetheme_custompages cleanly for
- *     the current request so both single-stylesheet themes (bootstrap3, moderndark) and multi-variant
- *     themes (bootstrap5 Bootswatch, i3theme) load their exact CSS and layout without leaking across
- *     themes or into the admin area.
+ * Loaded during class2.php initialization BEFORE theme initialization (e_theme::initTheme).
+ * Allows visitors with permission to switch frontend Theme, Stylesheet Variant, or Language
+ * via query parameters or persistent cookies without altering global database preferences
+ * or mutating persistent user_prefs. Also heals stale plugin folder registrations.
  */
 
 if (!defined('e107_INIT')) { exit; }
 
 require_once(__DIR__ . '/includes/e107_options_manager.php');
 
-// Always heal any stale hyphenated folder registrations before e_ADMIN_AREA returns,
-// because admin.php (adminstyle_flexpanel->render) and frontend themes both initialize e_parse_shortcode.
+// Self-heal stale folder registrations in core plugin table and e_module_list / e_header_list
 e107_options_manager::healStaleFolderRegistrations();
 
-// Never override frontend themes or cookies inside the e107 Admin area.
+// Never override admin area theme or language
 if (deftrue('e_ADMIN_AREA'))
 {
 	return;
 }
 
-$prefs = e107_options_manager::getPrefs();
-$state = e107_options_manager::getVisitorState();
+$e107optPrefs = e107_options_manager::getPrefs();
+$cookieExpire = time() + (180 * 86400); // 180 days
+$cookiePath   = defined('e_HTTP') ? e_HTTP : '/';
 
-$chosenTheme   = $state['theme'];
-$chosenVariant = $state['variant'];
+// ---------------------------------------------------------------------------
+// 1. Handle Reset Action (?e107opt_reset=1)
+// ---------------------------------------------------------------------------
+if (isset($_GET['e107opt_reset']))
+{
+	@setcookie('e107opt_theme', '', time() - 3600, $cookiePath);
+	@setcookie('e107opt_variant', '', time() - 3600, $cookiePath);
+	unset($_COOKIE['e107opt_theme'], $_COOKIE['e107opt_variant']);
+}
 
-// 1. Validate & apply Theme + Variant override if Theme Selector is not force-blocked
-if (empty($prefs['sel_theme_blocked']))
+// ---------------------------------------------------------------------------
+// 2. Language Switcher (Query Param ?e107opt_lang=...)
+// ---------------------------------------------------------------------------
+$canSwitchLang = empty($e107optPrefs['sel_language_blocked'])
+	&& (!function_exists('check_class') || check_class((int) ($e107optPrefs['sel_language_class'] ?? e_UC_PUBLIC)));
+
+if ($canSwitchLang && !empty($_GET['e107opt_lang']))
+{
+	$reqLang = preg_replace('/[^a-zA-Z0-9_-]/', '', (string) $_GET['e107opt_lang']);
+	$installedLangs = e107_options_manager::getInstalledLanguages();
+	if (in_array($reqLang, $installedLangs, true))
+	{
+		e107::getSession()->set('e_language', $reqLang);
+		@setcookie('e107_language', $reqLang, $cookieExpire, $cookiePath, '', false, false);
+		$_COOKIE['e107_language'] = $reqLang;
+	}
+}
+
+// ---------------------------------------------------------------------------
+// 3. Frontend Theme & Stylesheet Variant Switcher
+// ---------------------------------------------------------------------------
+$canSwitchTheme = empty($e107optPrefs['sel_theme_blocked'])
+	&& (!function_exists('check_class') || check_class((int) ($e107optPrefs['sel_theme_class'] ?? e_UC_PUBLIC)));
+
+if ($canSwitchTheme)
 {
 	$allowedThemes = e107_options_manager::getAllowedThemes();
+	$chosenTheme   = null;
+	$chosenVariant = null;
 
-	if ($chosenTheme !== null && isset($allowedThemes[$chosenTheme]))
+	// A. Check Query Parameter for Theme Switch
+	if (!empty($_GET['e107opt_theme']))
 	{
-		$themeMeta = $allowedThemes[$chosenTheme];
-
-		// Validate variant against this theme's declared variants; if none or invalid, reset to default stylesheet
-		$validVariant = null;
-		if (!empty($themeMeta['variants']))
+		$reqTheme = preg_replace('/[^a-zA-Z0-9_-]/', '', (string) $_GET['e107opt_theme']);
+		if (isset($allowedThemes[$reqTheme]))
 		{
-			foreach ($themeMeta['variants'] as $v)
-			{
-				if ($chosenVariant !== null && $v['file'] === $chosenVariant)
-				{
-					$validVariant = $chosenVariant;
-					break;
-				}
-			}
-			if ($validVariant === null)
-			{
-				$validVariant = $themeMeta['variants'][0]['file'];
-			}
-		}
-		else
-		{
-			// Single-stylesheet theme (e.g. bootstrap3, moderndark): explicitly reset to 'style.css'
-			// so an https:// Bootswatch URL from bootstrap5 never leaks into THEME_STYLE.
-			$validVariant = 'style.css';
-		}
+			$chosenTheme = $reqTheme;
+			@setcookie('e107opt_theme', $chosenTheme, $cookieExpire, $cookiePath, '', false, false);
+			$_COOKIE['e107opt_theme'] = $chosenTheme;
 
-		// Prevent class2.php from overriding our theme selection via a logged-in user's old USERTHEME pref
-		if (!defined('USERTHEME'))
-		{
-			define('USERTHEME', false);
-		}
-
-		// Sync both e107::getConfig('core') and $GLOBALS['pref'] in memory for this request only
-		// (never mutate e107::getUser()->getConfig() so visitor previews cannot be saved to admin user_prefs)
-		$coreCfg = e107::getConfig('core');
-		if ($coreCfg)
-		{
-			$coreCfg->set('sitetheme', $chosenTheme);
-			$coreCfg->set('themecss', $validVariant);
-
-			if (!empty($themeMeta['defaultLayout']))
+			// Reset variant cookie when switching themes unless explicitly passed
+			if (!isset($_GET['e107opt_variant']))
 			{
-				$coreCfg->set('sitetheme_deflayout', $themeMeta['defaultLayout']);
-			}
-			if (is_array($themeMeta['customPages']))
-			{
-				$coreCfg->set('sitetheme_custompages', $themeMeta['customPages']);
-			}
-		}
-
-		if (isset($GLOBALS['pref']) && is_array($GLOBALS['pref']))
-		{
-			$GLOBALS['pref']['sitetheme'] = $chosenTheme;
-			$GLOBALS['pref']['themecss']  = $validVariant;
-			if (!empty($themeMeta['defaultLayout']))
-			{
-				$GLOBALS['pref']['sitetheme_deflayout'] = $themeMeta['defaultLayout'];
-			}
-			if (is_array($themeMeta['customPages']))
-			{
-				$GLOBALS['pref']['sitetheme_custompages'] = $themeMeta['customPages'];
+				@setcookie('e107opt_variant', '', time() - 3600, $cookiePath);
+				unset($_COOKIE['e107opt_variant']);
 			}
 		}
 	}
-	elseif ($chosenVariant !== null)
+	elseif (!empty($_COOKIE['e107opt_theme']))
 	{
-		// Visitor stayed on the site's default theme, but chose a stylesheet variant
-		$siteTheme = e107::getPref('sitetheme', '');
-		if ($siteTheme !== '' && isset($allowedThemes[$siteTheme]) && !empty($allowedThemes[$siteTheme]['variants']))
+		$cookieTheme = preg_replace('/[^a-zA-Z0-9_-]/', '', (string) $_COOKIE['e107opt_theme']);
+		if (isset($allowedThemes[$cookieTheme]))
 		{
-			foreach ($allowedThemes[$siteTheme]['variants'] as $v)
+			$chosenTheme = $cookieTheme;
+		}
+	}
+
+	// Determine the effective theme to validate variants against
+	$activeThemeFolder = $chosenTheme ?: e107::getPref('sitetheme', 'moderndark');
+	$installedThemes   = e107_options_manager::getInstalledThemes();
+	$themeMeta         = $installedThemes[$activeThemeFolder] ?? null;
+
+	// B. Check Query Parameter or Cookie for Stylesheet Variant
+	if ($themeMeta && !empty($themeMeta['variants']))
+	{
+		if (isset($_GET['e107opt_variant']) && $_GET['e107opt_variant'] !== '')
+		{
+			$vCandidate = trim((string) $_GET['e107opt_variant']);
+			if (isset($themeMeta['variants'][$vCandidate]))
 			{
-				if ($v['file'] === $chosenVariant)
+				$chosenVariant = $vCandidate;
+				@setcookie('e107opt_variant', $chosenVariant, $cookieExpire, $cookiePath, '', false, false);
+				$_COOKIE['e107opt_variant'] = $chosenVariant;
+			}
+		}
+		elseif (!empty($_COOKIE['e107opt_variant']))
+		{
+			$vCandidate = trim((string) $_COOKIE['e107opt_variant']);
+			if (isset($themeMeta['variants'][$vCandidate]))
+			{
+				$chosenVariant = $vCandidate;
+			}
+		}
+
+		// If theme was switched but no variant chosen, pick the theme's default variant
+		if ($chosenVariant === null && $chosenTheme !== null)
+		{
+			foreach ($themeMeta['variants'] as $vFile => $vInfo)
+			{
+				if (!empty($vInfo['default']))
 				{
-					$coreCfg = e107::getConfig('core');
-					if ($coreCfg)
-					{
-						$coreCfg->set('themecss', $chosenVariant);
-					}
-					if (isset($GLOBALS['pref']) && is_array($GLOBALS['pref']))
-					{
-						$GLOBALS['pref']['themecss'] = $chosenVariant;
-					}
+					$chosenVariant = $vFile;
 					break;
 				}
 			}
+			if ($chosenVariant === null)
+			{
+				$chosenVariant = (string) array_key_first($themeMeta['variants']);
+			}
 		}
+	}
+	elseif ($themeMeta && empty($themeMeta['variants']) && $chosenTheme !== null)
+	{
+		// Single-stylesheet theme: force style.css so an https:// Bootswatch CDN URL from
+		// another theme (e.g. bootstrap5) never leaks into THEME_STYLE / themecss.
+		$chosenVariant = 'style.css';
+	}
+
+	// C. Apply Runtime Overrides to e107 Core Config & $GLOBALS['pref'] (in-memory only, never saved to DB)
+	if ($chosenTheme !== null)
+	{
+		$GLOBALS['E107OPT_ACTIVE_THEME'] = $chosenTheme;
+
+		if (!defined('USERTHEME'))
+		{
+			define('USERTHEME', $chosenTheme);
+		}
+
+		$coreConfig = e107::getConfig('core');
+		$coreConfig->set('sitetheme', $chosenTheme);
+		$GLOBALS['pref']['sitetheme'] = $chosenTheme;
+
+		if ($themeMeta)
+		{
+			$defLayout = $themeMeta['defaultLayout'] ?: 'default';
+			$customPages = is_array($themeMeta['custompages'] ?? null) ? $themeMeta['custompages'] : array();
+			$coreConfig->set('sitetheme_deflayout', $defLayout);
+			$coreConfig->set('sitetheme_custompages', $customPages);
+			$GLOBALS['pref']['sitetheme_deflayout'] = $defLayout;
+			$GLOBALS['pref']['sitetheme_custompages'] = $customPages;
+		}
+	}
+
+	if ($chosenVariant !== null)
+	{
+		$GLOBALS['E107OPT_ACTIVE_VARIANT'] = $chosenVariant;
+		$coreConfig = e107::getConfig('core');
+		$coreConfig->set('themecss', $chosenVariant);
+		$GLOBALS['pref']['themecss'] = $chosenVariant;
 	}
 }
