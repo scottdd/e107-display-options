@@ -1,6 +1,6 @@
 <?php
 /**
- * e107_options — Install & Upgrade Setup Handler (v1.0.3)
+ * e107_options — Install & Upgrade Setup Handler (v1.0.4)
  * Automatically cleans up any stale hyphenated folder registrations (e.g. e107-display-options)
  * in core prefs and the plugin table during install or upgrade.
  */

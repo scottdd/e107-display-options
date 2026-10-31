@@ -1,6 +1,6 @@
 <?php
 /**
- * e107_options — Frontend Header Hook (e_header.php) (v1.0.3)
+ * e107_options — Frontend Header Hook (e_header.php) (v1.0.4)
  * Injects the zero-FOUC early inline script and loads CSS/JS assets.
  */
 

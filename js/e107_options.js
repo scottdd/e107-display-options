@@ -222,7 +222,8 @@
 				} catch (err) {}
 				setCookie('e107opt_theme', '', -1);
 				setCookie('e107opt_variant', '', -1);
-				navigateWithParams({ e107opt_theme: null, e107opt_variant: null, e107opt_reset: '1' });
+				setCookie('e107_language', '', -1);
+				navigateWithParams({ e107opt_theme: null, e107opt_variant: null, e107opt_lang: null, elan: null, e107opt_reset: '1' });
 				return;
 			}
 

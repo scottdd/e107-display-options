@@ -1,4 +1,4 @@
-# e107 Display Options (`e107_options`) v1.0.3
+# e107 Display Options (`e107_options`) v1.0.4
 
 A unified, zero-FOUC **Display & Reader Options** plugin for **e107 v2.3+** (compatible with **PHP 7.4 through PHP 8.4+** and **Bootstrap 3, 4, and 5** themes).
 
@@ -40,11 +40,11 @@ Provides visitors with an accessible, persistent control panel — available as 
 ## Installation
 
 > **Important Note on Plugin Folder Name (`e107_options`):**
-> - **Recommended:** Download **`e107-tools-display-options-v1.0.3.zip`** (or **`e107_options_v1.0.3.zip`**) from the [Releases page](https://github.com/scottdd/e107-tools-display-options/releases/latest). It is pre-packaged with the required **`e107_options/`** folder structure.
+> - **Recommended:** Download **`e107-tools-display-options-v1.0.4.zip`** (or **`e107_options_v1.0.4.zip`**) from the [Releases page](https://github.com/scottdd/e107-tools-display-options/releases/latest). It is pre-packaged with the required **`e107_options/`** folder structure.
 > - **If you use GitHub's green "Code → Download ZIP" button (`e107-tools-display-options-main.zip`) or `git clone`:** You **must** rename the extracted folder inside `e107_plugins/` to **`e107_options`** (or `e107_display_options` — **never use hyphens** like `e107-tools-display-options-main`). e107 v2's `e107_handlers/shortcode_handler.php` constructs the PHP shortcode class name directly from the folder name (`<folder>_shortcodes`), and PHP class names cannot contain hyphens (`-`).
 
 ### Option A: One-Click Upload via e107 Admin (Recommended)
-1. Download **`e107-tools-display-options-v1.0.3.zip`** (or **`e107_options_v1.0.3.zip`**) from the [latest GitHub Release](https://github.com/scottdd/e107-tools-display-options/releases/latest).
+1. Download **`e107-tools-display-options-v1.0.4.zip`** (or **`e107_options_v1.0.4.zip`**) from the [latest GitHub Release](https://github.com/scottdd/e107-tools-display-options/releases/latest).
 2. In your e107 Admin area, go to **Admin → Plugin Manager → Upload Plugin** and upload the `.zip` archive.
 3. Click **Install** next to **e107 display options** (`e107_options`).
 
@@ -65,6 +65,17 @@ Then visit **Admin → Plugin Manager** and install **e107 display options**.
 ---
 
 ## Changelog
+
+### v1.0.4 (2026-10-30)
+- **Clean-URL `302` Redirect After Switching Theme, Variant, Language, or Reset (`#1`, `e107inc/e107#6853`):**
+  - Added `e107_options_manager::buildCleanRedirectUrl()` and immediate `302` redirect in `e_module.php` (inside `class2.php`, before `index.php` invokes the e107 v2 SEF URL router) after saving the visitor's cookie/session choice.
+  - Strips `e107opt_theme`, `e107opt_variant`, `e107opt_lang`, `e107opt_reset`, and companion `elan` parameters while preserving unrelated query parameters and bare e107 positional queries (e.g., `/news.php?extend.4`), preventing the upstream e107 core SEF router `404` (`e107inc/e107#6853`) on routes like `/contact`.
+  - Extended `?e107opt_reset=1` to also clear the visitor's `e107_language` cookie and `e_language` session override back to the site default language.
+  - Thanks to **@tgtje** for the detailed report and testing in [Issue #1](https://github.com/scottdd/e107-tools-display-options/issues/1).
+- **Exact Color Scheme Swatch Dots (theme.xml `swatch` attribute):**
+  - The Color Scheme pills now use an optional `swatch="#rrggbb"` attribute on each theme.xml `<stylesheets><css>` entry, so every dot matches its name and the colour actually applied (previously guessed from the name, e.g. "Blue" showed teal).
+  - Values are validated (`#` + 3–8 hex digits); invalid values are ignored. Themes without `swatch` keep the v1.0.3 name-based fallback unchanged.
+  - Theme authors: `<css file="accent-blue.css" name="Blue" scope="front" swatch="#1f6feb" />`
 
 ### v1.0.3 (2026-10-26)
 - **Fix Fatal `Call to undefined method e107_options_manager::getVisitorState()` in `e_module.php` (`#1`):**

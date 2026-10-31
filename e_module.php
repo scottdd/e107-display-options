@@ -1,11 +1,14 @@
 <?php
 /**
- * e107_options — Early Boot Module (e_module.php) (v1.0.3)
+ * e107_options — Early Boot Module (e_module.php) (v1.0.4)
  *
- * Loaded during class2.php initialization BEFORE theme initialization (e_theme::initTheme).
+ * Loaded during class2.php initialization BEFORE theme initialization (e_theme::initTheme)
+ * and BEFORE index.php invokes the e107 v2 SEF router.
  * Allows visitors with permission to switch frontend Theme, Stylesheet Variant, or Language
  * via query parameters or persistent cookies without altering global database preferences
- * or mutating persistent user_prefs. Also heals stale plugin folder registrations.
+ * or mutating persistent user_prefs, then redirects to the clean URL (stripping e107opt_*
+ * and companion elan parameters) so SEF routes like /contact never hit core issue #6853 404s.
+ * Also heals stale plugin folder registrations.
  */
 
 if (!defined('e107_INIT')) { exit; }
@@ -21,9 +24,13 @@ if (deftrue('e_ADMIN_AREA'))
 	return;
 }
 
+$GLOBALS['E107OPT_CLEAN_REDIRECT_URL'] = null;
+
 $e107optPrefs = e107_options_manager::getPrefs();
 $cookieExpire = time() + (180 * 86400); // 180 days
-$cookiePath   = defined('e_HTTP') ? e_HTTP : '/';
+$cookiePath   = (class_exists('e107', false) && method_exists('e107', 'cookiePath') && defined('e_HTTP'))
+	? e107::cookiePath(e_HTTP)
+	: (defined('e_HTTP') ? e_HTTP : '/');
 
 // ---------------------------------------------------------------------------
 // 1. Handle Reset Action (?e107opt_reset=1)
@@ -32,7 +39,23 @@ if (isset($_GET['e107opt_reset']))
 {
 	@setcookie('e107opt_theme', '', time() - 3600, $cookiePath);
 	@setcookie('e107opt_variant', '', time() - 3600, $cookiePath);
-	unset($_COOKIE['e107opt_theme'], $_COOKIE['e107opt_variant']);
+	@setcookie('e107_language', '', time() - 3600, $cookiePath);
+	unset($_COOKIE['e107opt_theme'], $_COOKIE['e107opt_variant'], $_COOKIE['e107_language']);
+	if (class_exists('e107', false) && method_exists('e107', 'getSession'))
+	{
+		$sess = e107::getSession();
+		if (is_object($sess))
+		{
+			if (method_exists($sess, 'clear'))
+			{
+				$sess->clear('e_language');
+			}
+			elseif (method_exists($sess, 'set'))
+			{
+				$sess->set('e_language', null);
+			}
+		}
+	}
 }
 
 // ---------------------------------------------------------------------------
@@ -175,4 +198,21 @@ if ($canSwitchTheme)
 		$coreConfig->set('themecss', $chosenVariant);
 		$GLOBALS['pref']['themecss'] = $chosenVariant;
 	}
+}
+
+// ---------------------------------------------------------------------------
+// 4. Clean-URL Redirect after processing e107opt_* query parameters
+// ---------------------------------------------------------------------------
+$cleanRedirectUrl = e107_options_manager::buildCleanRedirectUrl();
+$GLOBALS['E107OPT_CLEAN_REDIRECT_URL'] = $cleanRedirectUrl;
+
+if ($cleanRedirectUrl !== null && PHP_SAPI !== 'cli' && !defined('E107OPT_NO_REDIRECT') && !headers_sent())
+{
+	if (function_exists('session_status') && session_status() === PHP_SESSION_ACTIVE)
+	{
+		session_write_close();
+	}
+	header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+	header('Location: ' . $cleanRedirectUrl, true, 302);
+	exit;
 }

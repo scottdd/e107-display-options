@@ -1,7 +1,7 @@
 <?php
 /**
  * e107_options — Central Capability Detector, Preference Manager & Renderer
- * Compatible with e107 v2.3.x and PHP 7.4–8.4+ (v1.0.3)
+ * Compatible with e107 v2.3.x and PHP 7.4–8.4+ (v1.0.4)
  */
 
 if (!defined('e107_INIT')) { exit; }
@@ -352,10 +352,13 @@ class e107_options_manager
 							{
 								continue;
 							}
+							// Optional theme.xml swatch="#rrggbb" (v1.0.4): exact color for the variant pill.
+							$swatch = isset($cAttrs['swatch']) ? trim((string) $cAttrs['swatch']) : '';
 							$info['variants'][$file] = array(
 								'file'    => $file,
 								'label'   => ($label !== '' && $label !== '*') ? $label : $file,
 								'default' => $isDef,
+								'swatch'  => preg_match('/^#[0-9a-fA-F]{3,8}$/', $swatch) ? $swatch : '',
 							);
 						}
 					}
@@ -500,6 +503,160 @@ class e107_options_manager
 			'lang'    => ($lang !== '' && $lang !== null) ? $lang : null,
 			'reset'   => false,
 		);
+	}
+
+	/**
+	 * Build a clean local redirect URI with e107_options action parameters
+	 * (e107opt_reset, e107opt_lang, e107opt_theme, e107opt_variant, and companion elan)
+	 * stripped from the query string.
+	 *
+	 * Used by e_module.php after persisting cookies/session state so the browser
+	 * 302-redirects to the clean URL before index.php invokes the e107 v2 SEF router
+	 * (working around upstream e107 core issue #6853 where SEF URLs like /contact
+	 * return 404 when any query string is attached).
+	 *
+	 * Returns null when the current request is not a GET action containing at least
+	 * one e107opt_* trigger parameter.
+	 *
+	 * @param string|null $requestUri Optional explicit URI for testing; defaults to $_SERVER['REQUEST_URI'].
+	 * @return string|null Clean relative URI starting with a single '/', or null if no redirect needed.
+	 */
+	public static function buildCleanRedirectUrl(?string $requestUri = null): ?string
+	{
+		if ($requestUri === null)
+		{
+			$method = isset($_SERVER['REQUEST_METHOD']) ? strtoupper((string) $_SERVER['REQUEST_METHOD']) : 'GET';
+			if ($method !== 'GET')
+			{
+				return null;
+			}
+		}
+
+		$rawUri = ($requestUri !== null) ? $requestUri : (isset($_SERVER['REQUEST_URI']) ? (string) $_SERVER['REQUEST_URI'] : '');
+		$rawUri = str_replace(array("\r", "\n", "\0"), '', trim($rawUri));
+
+		$getHasAction = isset($_GET['e107opt_reset'])
+			|| (isset($_GET['e107opt_lang']) && $_GET['e107opt_lang'] !== '')
+			|| (isset($_GET['e107opt_theme']) && $_GET['e107opt_theme'] !== '')
+			|| (isset($_GET['e107opt_variant']) && $_GET['e107opt_variant'] !== '');
+
+		if ($rawUri === '')
+		{
+			if ($requestUri === null && $getHasAction)
+			{
+				$rawUri = (isset($_SERVER['PHP_SELF']) && $_SERVER['PHP_SELF'] !== '') ? (string) $_SERVER['PHP_SELF'] : '/';
+			}
+			else
+			{
+				return null;
+			}
+		}
+
+		// Strip any URL fragment
+		$hashPos = strpos($rawUri, '#');
+		if ($hashPos !== false)
+		{
+			$rawUri = substr($rawUri, 0, $hashPos);
+		}
+
+		// Separate path and query string
+		$qPos = strpos($rawUri, '?');
+		if ($qPos !== false)
+		{
+			$rawPath  = substr($rawUri, 0, $qPos);
+			$rawQuery = substr($rawUri, $qPos + 1);
+		}
+		else
+		{
+			$rawPath  = $rawUri;
+			$rawQuery = '';
+		}
+
+		// Harden against open-redirect vectors (//evil.example/path, https://evil.example/path, /\evil.example/path)
+		$normalizedPath = str_replace('\\', '/', $rawPath);
+		if (preg_match('#^(?:[a-zA-Z][a-zA-Z0-9+.-]*://|//+)#', $normalizedPath))
+		{
+			$collapseProtoRel = preg_replace('#^//+#', '//', $normalizedPath);
+			$parsedPath = @parse_url($collapseProtoRel, PHP_URL_PATH);
+			$normalizedPath = (is_string($parsedPath) && $parsedPath !== '') ? $parsedPath : '/';
+		}
+		$cleanPath = preg_replace('#^/+#', '/', $normalizedPath);
+		if (!is_string($cleanPath) || $cleanPath === '' || $cleanPath[0] !== '/')
+		{
+			$cleanPath = '/' . ltrim((string) $cleanPath, '/');
+		}
+
+		// Inspect raw query segments to preserve e107 positional queries (e.g. ?extend.4 or ?item.4.1)
+		$segments       = ($rawQuery !== '') ? explode('&', $rawQuery) : array();
+		$queryHasAction = false;
+		$queryHasLang   = false;
+		$actionKeys     = array('e107opt_reset', 'e107opt_lang', 'e107opt_theme', 'e107opt_variant');
+
+		foreach ($segments as $seg)
+		{
+			if ($seg === '')
+			{
+				continue;
+			}
+			$eq  = strpos($seg, '=');
+			$key = rawurldecode(($eq === false) ? $seg : substr($seg, 0, $eq));
+			if (in_array($key, $actionKeys, true))
+			{
+				$queryHasAction = true;
+			}
+			if ($key === 'e107opt_lang' || $key === 'e107opt_reset')
+			{
+				$queryHasLang = true;
+			}
+		}
+
+		// Only redirect if an e107opt_* action parameter was present
+		$hasTrigger = ($requestUri !== null) ? $queryHasAction : ($queryHasAction || $getHasAction);
+		if (!$hasTrigger)
+		{
+			return null;
+		}
+
+		$stripElan = $queryHasLang
+			|| ($requestUri === null && (isset($_GET['e107opt_lang']) || isset($_GET['e107opt_reset'])));
+
+		$keptSegments = array();
+		foreach ($segments as $seg)
+		{
+			if ($seg === '')
+			{
+				continue;
+			}
+			$eq  = strpos($seg, '=');
+			$key = rawurldecode(($eq === false) ? $seg : substr($seg, 0, $eq));
+			if (in_array($key, $actionKeys, true))
+			{
+				continue;
+			}
+			if ($stripElan && $key === 'elan')
+			{
+				continue;
+			}
+
+			// If browser URLSearchParams appended a trailing '=' to a bare e107 positional token (e.g. extend.4= or 404=), restore it
+			if ($eq !== false && substr($seg, $eq + 1) === '')
+			{
+				$rawKey = substr($seg, 0, $eq);
+				if (strpos($rawKey, '.') !== false || ctype_digit($rawKey))
+				{
+					$seg = $rawKey;
+				}
+			}
+
+			$keptSegments[] = $seg;
+		}
+
+		if (empty($keptSegments))
+		{
+			return $cleanPath;
+		}
+
+		return $cleanPath . '?' . implode('&', $keptSegments);
 	}
 
 	/**
@@ -780,7 +937,7 @@ class e107_options_manager
 					{
 						$isAct = ($vFile === $activeVariant || (empty($variants[$activeVariant]) && !empty($vInfo['default'])));
 						$actClass = $isAct ? ' is-active' : '';
-						$swatchColor = self::guessVariantColor($vFile, $vInfo['label']);
+						$swatchColor = !empty($vInfo['swatch']) ? $vInfo['swatch'] : self::guessVariantColor($vFile, $vInfo['label']);
 						$html .= '<button type="button" class="e107opt-variant-btn' . $actClass . '" data-e107opt-variant="' . htmlspecialchars($vFile, ENT_QUOTES, 'UTF-8') . '" title="' . htmlspecialchars($vInfo['label'], ENT_QUOTES, 'UTF-8') . '">'
 							. '<span class="e107opt-swatch" style="background:' . $swatchColor . ';"></span>'
 							. '<span class="e107opt-variant-name">' . htmlspecialchars($vInfo['label'], ENT_QUOTES, 'UTF-8') . '</span>'

@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<e107Plugin name="e107 display options" lan="LAN_PLUGIN_E107OPT_NAME" version="1.0.3" date="2026-10-26" compatibility="2.0" installRequired="true">
+<e107Plugin name="e107 display options" lan="LAN_PLUGIN_E107OPT_NAME" version="1.0.4" date="2026-10-30" compatibility="2.0" installRequired="true">
 	<author name="Scott Dowlen" url="https://github.com/scottdd/e107-tools-display-options" />
 	<summary lan="LAN_PLUGIN_E107OPT_SUMMARY">Unified frontend Display &amp; Reader Options control panel (Light/Dark/Auto mode, Theme &amp; Variant switcher, Language switcher, Text Size scaler, and Wide/Reader Focus layout controls) in both Navbar Popover and Sidebar Menu modes.</summary>
-	<description lan="LAN_PLUGIN_E107OPT_DESC">Provides a sleek, zero-FOUC Display &amp; Reader Options widget for e107 v2.3+ and PHP 7.4–8.4+. Supports both a compact Navbar Popover Dropdown ({E107_OPTIONS} or automatic header injection) and a Sidebar Menu Card (e107_options_menu). Automatically detects installed themes, theme.xml stylesheet variants, color-mode support, and installed language packs, with per-selector ordering, force-blocking, and userclass visibility controls.</description>
+	<description lan="LAN_PLUGIN_E107OPT_DESC">Provides a sleek, zero-FOUC Display &amp; Reader Options widget for e107 v2.3+ and PHP 7.4–8.4+. Supports both a compact Navbar Popover Dropdown ({E107_OPTIONS} or automatic header injection) and a Sidebar Menu Card (e107_options_menu). Automatically detects installed themes, theme.xml stylesheet variants, color-mode support, and installed language packs, with per-selector ordering, force-blocking, and userclass visibility controls. Imagined by human, built with AI.</description>
 	<keywords>
 		<word>options</word>
 		<word>theme</word>
